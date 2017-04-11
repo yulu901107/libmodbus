@@ -87,7 +87,7 @@ typedef struct _modbus_backend {
                                 int nb, uint8_t *req);
     int (*build_response_basis) (sft_t *sft, uint8_t *rsp);
     int (*prepare_response_tid) (const uint8_t *req, int *req_length);
-    int (*send_msg_pre) (uint8_t *req, int req_length);
+    int (*send_msg_pre) (modbus_t *ctx, uint8_t *req, int req_length);
     ssize_t (*send) (modbus_t *ctx, const uint8_t *req, int req_length);
     ssize_t (*recv) (modbus_t *ctx, uint8_t *rsp, int rsp_length);
     int (*check_integrity) (modbus_t *ctx, uint8_t *msg,
@@ -99,6 +99,7 @@ typedef struct _modbus_backend {
     int (*flush) (modbus_t *ctx);
     int (*select) (modbus_t *ctx, fd_set *rfds, struct timeval *tv, int msg_length);
     int (*filter_request) (modbus_t *ctx, int slave);
+    void (*set_stupid_crc) (modbus_t *ctx, uint8_t is_stupid);
 } modbus_backend_t;
 
 struct _modbus {

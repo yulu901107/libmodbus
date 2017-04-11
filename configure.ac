@@ -14,12 +14,13 @@
 m4_define([libmodbus_version_major], [3])
 m4_define([libmodbus_version_minor], [0])
 m4_define([libmodbus_version_micro], [6])
+m4_define([libmodbus_version_suffix],[joc])
 
 m4_define([libmodbus_release_status],
     [m4_if(m4_eval(libmodbus_version_minor % 2), [1], [snapshot], [release])])
 
 m4_define([libmodbus_version],
-    [libmodbus_version_major.libmodbus_version_minor.libmodbus_version_micro])
+    [libmodbus_version_major.libmodbus_version_minor.libmodbus_version_micro~libmodbus_version_suffix])
 
 AC_PREREQ([2.63])
 AC_INIT([libmodbus],[libmodbus_version],[https://github.com/stephane/libmodbus/issues])

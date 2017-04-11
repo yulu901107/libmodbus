@@ -162,13 +162,15 @@ int _modbus_tcp_prepare_response_tid(const uint8_t *req, int *req_length)
     return (req[0] << 8) + req[1];
 }
 
-int _modbus_tcp_send_msg_pre(uint8_t *req, int req_length)
+int _modbus_tcp_send_msg_pre(modbus_t *ctx, uint8_t *req, int req_length)
 {
     /* Substract the header length to the message length */
     int mbap_length = req_length - 6;
 
     req[4] = mbap_length >> 8;
     req[5] = mbap_length & 0x00FF;
+
+    (void) ctx;
 
     return req_length;
 }
@@ -608,7 +610,8 @@ const modbus_backend_t _modbus_tcp_backend = {
     _modbus_tcp_close,
     _modbus_tcp_flush,
     _modbus_tcp_select,
-    _modbus_tcp_filter_request
+    _modbus_tcp_filter_request,
+    NULL
 };
 
 

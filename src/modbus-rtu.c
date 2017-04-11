@@ -138,7 +138,7 @@ static int _modbus_rtu_build_response_basis(sft_t *sft, uint8_t *rsp)
     return _MODBUS_RTU_PRESET_RSP_LENGTH;
 }
 
-static uint16_t crc16(uint8_t *buffer, uint16_t buffer_length)
+static uint16_t crc16(uint8_t *buffer, uint16_t buffer_length, uint8_t is_stupid)
 {
     uint8_t crc_hi = 0xFF; /* high CRC byte initialized */
     uint8_t crc_lo = 0xFF; /* low CRC byte initialized */
@@ -151,7 +151,11 @@ static uint16_t crc16(uint8_t *buffer, uint16_t buffer_length)
         crc_lo = table_crc_lo[i];
     }
 
-    return (crc_hi << 8 | crc_lo);
+    if (is_stupid == 0)
+        return (crc_hi << 8 | crc_lo);
+    else {
+        return (crc_lo << 8 | crc_hi);
+    }
 }
 
 int _modbus_rtu_prepare_response_tid(const uint8_t *req, int *req_length)
@@ -161,9 +165,13 @@ int _modbus_rtu_prepare_response_tid(const uint8_t *req, int *req_length)
     return 0;
 }
 
-int _modbus_rtu_send_msg_pre(uint8_t *req, int req_length)
+int _modbus_rtu_send_msg_pre(modbus_t *ctx, uint8_t *req, int req_length)
 {
-    uint16_t crc = crc16(req, req_length);
+    uint16_t crc = 0u;
+    if (ctx != NULL && ctx->backend_data != NULL)
+        crc = crc16(req, req_length, ((modbus_rtu_t *)ctx->backend_data)->stupid_crc);
+    else
+        crc = crc16(req, req_length, 0);
     req[req_length++] = crc >> 8;
     req[req_length++] = crc & 0x00FF;
 
@@ -287,7 +295,11 @@ int _modbus_rtu_check_integrity(modbus_t *ctx, uint8_t *msg,
     uint16_t crc_calculated;
     uint16_t crc_received;
 
-    crc_calculated = crc16(msg, msg_length - 2);
+    if (ctx != NULL && ctx->backend_data != NULL)
+        crc_calculated = crc16(msg, msg_length - 2, ((modbus_rtu_t *)ctx->backend_data)->stupid_crc);
+    else
+        crc_calculated = crc16(msg, msg_length - 2, 0);
+
     crc_received = (msg[msg_length - 2] << 8) | msg[msg_length - 1];
 
     /* Check CRC of msg */
@@ -857,6 +869,13 @@ int _modbus_rtu_filter_request(modbus_t *ctx, int slave)
     }
 }
 
+void _modbus_rtu_set_stupid_crc(modbus_t *ctx, uint8_t is_stupid)
+{
+    if (ctx != NULL && ctx->backend_data != NULL) {
+        ((modbus_rtu_t *)ctx->backend_data)->stupid_crc = is_stupid;
+    }
+}
+
 const modbus_backend_t _modbus_rtu_backend = {
     _MODBUS_BACKEND_TYPE_RTU,
     _MODBUS_RTU_HEADER_LENGTH,
@@ -875,7 +894,8 @@ const modbus_backend_t _modbus_rtu_backend = {
     _modbus_rtu_close,
     _modbus_rtu_flush,
     _modbus_rtu_select,
-    _modbus_rtu_filter_request
+    _modbus_rtu_filter_request,
+    _modbus_rtu_set_stupid_crc
 };
 
 modbus_t* modbus_new_rtu(const char *device,
@@ -920,6 +940,7 @@ modbus_t* modbus_new_rtu(const char *device,
     }
     ctx_rtu->data_bit = data_bit;
     ctx_rtu->stop_bit = stop_bit;
+    ctx_rtu->stupid_crc = 0;
 
     return ctx;
 }

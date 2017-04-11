@@ -60,6 +60,9 @@ MODBUS_BEGIN_DECLS
 #define ON 1
 #endif
 
+/* Modbus JOC */
+#define MODBUS_IS_JOC	1
+
 #define MODBUS_BROADCAST_ADDRESS    0
 
 /* Modbus_Application_Protocol_V1_1b.pdf (chapter 6 section 1 page 12)
@@ -193,6 +196,8 @@ int modbus_reply(modbus_t *ctx, const uint8_t *req,
                  int req_length, modbus_mapping_t *mb_mapping);
 int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
                            unsigned int exception_code);
+
+void modbus_set_stupid_crc(modbus_t *ctx, uint8_t is_stupid);
 
 /**
  * UTILS FUNCTIONS

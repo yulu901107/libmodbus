@@ -164,7 +164,7 @@ static int send_msg(modbus_t *ctx, uint8_t *msg, int msg_length)
     int rc;
     int i;
 
-    msg_length = ctx->backend->send_msg_pre(msg, msg_length);
+    msg_length = ctx->backend->send_msg_pre(ctx, msg, msg_length);
 
     if (ctx->debug) {
         for (i = 0; i < msg_length; i++)
@@ -1008,6 +1008,12 @@ int modbus_reply_exception(modbus_t *ctx, const uint8_t *req,
         errno = EINVAL;
         return -1;
     }
+}
+
+void modbus_set_stupid_crc(modbus_t *ctx, uint8_t is_stupid)
+{
+    if (ctx != NULL && ctx->backend != NULL && ctx->backend->set_stupid_crc != NULL)
+        ctx->backend->set_stupid_crc(ctx, is_stupid);
 }
 
 /* Reads IO status */

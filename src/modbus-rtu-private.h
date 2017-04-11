@@ -71,6 +71,8 @@ typedef struct _modbus_rtu {
     uint8_t stop_bit;
     /* Parity: 'N', 'O', 'E' */
     char parity;
+    /* JOC Stupid CRC */
+    uint8_t stupid_crc;
 #if defined(_WIN32)
     struct win32_ser w_ser;
     DCB old_dcb;
